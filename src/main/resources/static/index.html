@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Resource Planning Ledger</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <header>
+    <h1>Resource Planning Ledger</h1>
+    <nav>
+      <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="protocols">Protocols</button>
+      <button class="tab-btn" data-tab="resources">Resource Types</button>
+      <button class="tab-btn" data-tab="plans">Plans</button>
+      <button class="tab-btn" data-tab="ledger">Ledger</button>
+      <button class="tab-btn" data-tab="audit">Audit Log</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- DASHBOARD -->
+    <section id="tab-dashboard" class="tab-section active">
+      <h2>Pool Account Balances</h2>
+      <div id="dashboard-accounts"></div>
+    </section>
+
+    <!-- PROTOCOLS -->
+    <section id="tab-protocols" class="tab-section">
+      <h2>Protocol Catalogue</h2>
+      <div class="form-card">
+        <h3>Create Protocol</h3>
+        <input id="proto-name" placeholder="Name" />
+        <textarea id="proto-desc" placeholder="Description"></textarea>
+        <button onclick="createProtocol()">Create</button>
+      </div>
+      <div id="protocols-list"></div>
+    </section>
+
+    <!-- RESOURCE TYPES -->
+    <section id="tab-resources" class="tab-section">
+      <h2>Resource Type Catalogue</h2>
+      <div class="form-card">
+        <h3>Create Resource Type</h3>
+        <input id="rt-name" placeholder="Name" />
+        <select id="rt-kind">
+          <option value="CONSUMABLE">CONSUMABLE</option>
+          <option value="ASSET">ASSET</option>
+        </select>
+        <input id="rt-unit" placeholder="Unit of measure" />
+        <button onclick="createResourceType()">Create</button>
+      </div>
+      <div id="resources-list"></div>
+    </section>
+
+    <!-- PLANS -->
+    <section id="tab-plans" class="tab-section">
+      <h2>Plans</h2>
+      <div class="form-card">
+        <h3>Create Plan</h3>
+        <input id="plan-name" placeholder="Plan name" />
+        <input id="plan-proto" placeholder="Source protocol ID (blank = scratch)" />
+        <input id="plan-date" type="date" />
+        <button onclick="createPlan()">Create</button>
+      </div>
+      <div id="plans-list"></div>
+      <div id="plan-detail"></div>
+    </section>
+
+    <!-- LEDGER -->
+    <section id="tab-ledger" class="tab-section">
+      <h2>Ledger</h2>
+      <div id="ledger-accounts"></div>
+      <div class="form-card">
+        <h3>View Entries</h3>
+        <input id="ledger-account-id" placeholder="Account ID" />
+        <button onclick="loadEntries()">Load Entries</button>
+      </div>
+      <div id="ledger-entries"></div>
+    </section>
+
+    <!-- AUDIT -->
+    <section id="tab-audit" class="tab-section">
+      <h2>Audit Log</h2>
+      <button onclick="loadAuditLog()">Refresh</button>
+      <div id="audit-list"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
