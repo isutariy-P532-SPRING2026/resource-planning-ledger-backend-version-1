@@ -6,6 +6,7 @@ import edu.indiana.p532.rpl.manager.ResourceTypeManager;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -47,12 +48,13 @@ public class ResourceTypeController {
     }
 
     private Map<String, Object> toMap(ResourceType rt) {
-        return Map.of(
-                "id", rt.getId(),
-                "name", rt.getName(),
-                "kind", rt.getKind().name(),
-                "unitOfMeasure", rt.getUnitOfMeasure(),
-                "poolAccountId", rt.getPoolAccount() != null ? rt.getPoolAccount().getId() : ""
-        );
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("id", rt.getId());
+        map.put("name", rt.getName());
+        map.put("kind", rt.getKind().name());
+        map.put("unitOfMeasure", rt.getUnitOfMeasure());
+        map.put("poolAccountId",   rt.getPoolAccount() != null ? rt.getPoolAccount().getId()   : null);
+        map.put("poolAccountName", rt.getPoolAccount() != null ? rt.getPoolAccount().getName() : null);
+        return map;
     }
 }

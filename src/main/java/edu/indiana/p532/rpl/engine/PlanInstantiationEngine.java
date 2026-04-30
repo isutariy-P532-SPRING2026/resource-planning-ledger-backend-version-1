@@ -30,6 +30,7 @@ public class PlanInstantiationEngine {
                     step.getName(),
                     step.getSubProtocol() != null ? step.getSubProtocol() : protocol,
                     null, null, null);
+            action.setDependsOn(step.getDependsOn());
             plan.addChild(action);
             stepNameToAction.put(step.getName(), action);
         }

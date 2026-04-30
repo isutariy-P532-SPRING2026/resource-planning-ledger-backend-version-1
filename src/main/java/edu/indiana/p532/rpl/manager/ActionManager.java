@@ -19,6 +19,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class ActionManager implements ActionContextCallback {
@@ -98,6 +103,26 @@ public class ActionManager implements ActionContextCallback {
         return actionRepository.save(action);
     }
 
+    /**
+     * Generic transition dispatcher — maps event name to existing state-machine
+     * methods. Week 2 new states only need a new ActionState bean registered via
+     * Spring DI plus a new case here; ActionController never changes.
+     */
+    @Transactional
+    public ProposedAction executeTransition(Long id, String event, java.util.Map<String, String> params) {
+        return switch (event.toLowerCase()) {
+            case "implement" -> implement(id, new ImplementActionRequest(
+                    params.getOrDefault("actualParty", ""),
+                    params.getOrDefault("actualLocation", ""),
+                    null));
+            case "complete"  -> complete(id);
+            case "suspend"   -> suspend(id, new SuspendRequest(params.getOrDefault("reason", "Suspended")));
+            case "resume"    -> resume(id);
+            case "abandon"   -> abandon(id);
+            default -> throw new IllegalArgumentException("Unknown transition event: " + event);
+        };
+    }
+
     @Transactional
     public ResourceAllocation addAllocation(Long actionId, ResourceAllocationRequest request) {
         ProposedAction action = load(actionId);
@@ -138,6 +163,59 @@ public class ActionManager implements ActionContextCallback {
         );
 
         return result;
+    }
+
+    /**
+     * Returns all fields needed by the action detail page, with all lazy associations
+     * force-loaded inside a single @Transactional boundary. This prevents
+     * LazyInitializationException when the controller accesses resourceType.getName()
+     * or implementedAction fields on detached entities.
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> getDetailAsMap(Long id) {
+        return buildDetailMap(load(id));
+    }
+
+    private Map<String, Object> buildDetailMap(ProposedAction a) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("id",              a.getId());
+        map.put("name",            a.getName());
+        map.put("status",          a.getStatus().name());
+        map.put("party",           a.getParty()    != null ? a.getParty()    : "");
+        map.put("timeRef",         a.getTimeRef()  != null ? a.getTimeRef()  : "");
+        map.put("location",        a.getLocation() != null ? a.getLocation() : "");
+        map.put("legalTransitions", stateMachineEngine.legalTransitions(a.getStatus().name()));
+        map.put("dependsOn",       a.getDependsOn() != null ? a.getDependsOn() : "");
+
+        Optional<ImplementedAction> implOpt =
+                implementedActionRepository.findByProposedActionId(a.getId());
+
+        List<ResourceAllocation> allocs = new ArrayList<>(
+                allocationRepository.findByActionIdAndActionType(a.getId(), "PROPOSED_ACTION"));
+        implOpt.ifPresent(impl -> allocs.addAll(
+                allocationRepository.findByActionIdAndActionType(impl.getId(), "IMPLEMENTED_ACTION")));
+
+        map.put("allocations", allocs.stream().map(al -> {
+            Map<String, Object> am = new LinkedHashMap<>();
+            am.put("id",               al.getId());
+            am.put("resourceTypeName", al.getResourceType().getName()); // safe: inside @Transactional
+            am.put("quantity",         al.getQuantity());
+            am.put("kind",             al.getKind().name());
+            am.put("assetId",          al.getAssetId()    != null ? al.getAssetId()    : "");
+            am.put("timePeriod",       al.getTimePeriod() != null ? al.getTimePeriod() : "");
+            return am;
+        }).toList());
+
+        map.put("implemented", implOpt.<Map<String, Object>>map(impl -> {
+            Map<String, Object> im = new LinkedHashMap<>();
+            im.put("actualParty",    impl.getActualParty()    != null ? impl.getActualParty()    : "");
+            im.put("actualLocation", impl.getActualLocation() != null ? impl.getActualLocation() : "");
+            im.put("actualStart",    impl.getActualStart()    != null ? impl.getActualStart().toString() : "");
+            im.put("status",         impl.getStatus()         != null ? impl.getStatus().name()  : "");
+            return im;
+        }).orElse(null));
+
+        return map;
     }
 
     // --- ActionContextCallback implementation ---

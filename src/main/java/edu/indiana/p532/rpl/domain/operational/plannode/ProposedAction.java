@@ -26,6 +26,10 @@ public class ProposedAction extends PlanNodeEntity {
     @Column(name = "state_name", nullable = false)
     private String stateName = ActionStatus.PROPOSED.name();
 
+    // dependency step names copied from ProtocolStep at instantiation time
+    @Column(name = "depends_on")
+    private String dependsOn;
+
     @Column(name = "party")
     private String party;
 
@@ -79,6 +83,8 @@ public class ProposedAction extends PlanNodeEntity {
 
     public String getStateName() { return stateName; }
     public void setStateName(String stateName) { this.stateName = stateName; }
+    public String getDependsOn() { return dependsOn; }
+    public void setDependsOn(String dependsOn) { this.dependsOn = dependsOn; }
     public String getParty() { return party; }
     public void setParty(String party) { this.party = party; }
     public String getTimeRef() { return timeRef; }

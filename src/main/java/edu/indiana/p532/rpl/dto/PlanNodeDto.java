@@ -8,5 +8,7 @@ public record PlanNodeDto(
         String type,                    // "PLAN" or "ACTION"
         String status,
         List<String> legalTransitions,  // populated for ACTION nodes; empty for PLAN nodes
-        List<PlanNodeDto> children
+        List<PlanNodeDto> children,
+        String targetStartDate,         // populated for PLAN nodes
+        String dependsOn                // populated for ACTION nodes from protocol step
 ) {}

@@ -42,19 +42,52 @@ public class Plan extends PlanNodeEntity {
     public ActionStatus getStatus() {
         if (children.isEmpty()) return ActionStatus.PROPOSED;
 
-        boolean allCompleted = children.stream().allMatch(c -> c.getStatus() == ActionStatus.COMPLETED);
-        if (allCompleted) return ActionStatus.COMPLETED;
+        boolean hasProposed = false;
+        boolean hasInProgress = false;
+        boolean hasCompleted = false;
+        boolean hasSuspended = false;
+        boolean hasAbandoned = false;
 
-        boolean allAbandoned = children.stream().allMatch(c -> c.getStatus() == ActionStatus.ABANDONED);
-        if (allAbandoned) return ActionStatus.ABANDONED;
+        for (PlanNodeEntity child : children) {
+            ActionStatus status = child.getStatus();
 
-        boolean anyInProgress = children.stream().anyMatch(c ->
-                c.getStatus() == ActionStatus.IN_PROGRESS || c.getStatus() == ActionStatus.COMPLETED);
-        if (anyInProgress) return ActionStatus.IN_PROGRESS;
+            switch (status) {
+                case PROPOSED:
+                    hasProposed = true;
+                    break;
+                case IN_PROGRESS:
+                    hasInProgress = true;
+                    break;
+                case COMPLETED:
+                    hasCompleted = true;
+                    break;
+                case SUSPENDED:
+                    hasSuspended = true;
+                    break;
+                case ABANDONED:
+                    hasAbandoned = true;
+                    break;
+            }
+        }
 
-        boolean anySuspended = children.stream().anyMatch(c -> c.getStatus() == ActionStatus.SUSPENDED);
-        if (anySuspended) return ActionStatus.SUSPENDED;
+        // 1. Any IN_PROGRESS → IN_PROGRESS
+        if (hasInProgress) return ActionStatus.IN_PROGRESS;
 
+        // 2. Mixed COMPLETED + PROPOSED → IN_PROGRESS  ✅ (this fixes your failing test)
+        if (hasCompleted && hasProposed) return ActionStatus.IN_PROGRESS;
+
+        // 3. All COMPLETED → COMPLETED
+        if (hasCompleted && !hasProposed && !hasSuspended && !hasAbandoned)
+            return ActionStatus.COMPLETED;
+
+        // 4. Any SUSPENDED (and none IN_PROGRESS) → SUSPENDED
+        if (hasSuspended) return ActionStatus.SUSPENDED;
+
+        // 5. All ABANDONED → ABANDONED
+        if (hasAbandoned && !hasProposed && !hasCompleted && !hasInProgress)
+            return ActionStatus.ABANDONED;
+
+        // 6. Default → PROPOSED
         return ActionStatus.PROPOSED;
     }
 

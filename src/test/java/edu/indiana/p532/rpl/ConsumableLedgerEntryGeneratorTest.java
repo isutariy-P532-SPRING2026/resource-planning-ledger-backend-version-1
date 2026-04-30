@@ -95,6 +95,8 @@ class ConsumableLedgerEntryGeneratorTest {
         verify(entryRepository, never()).save(any());
     }
 
+    // ONLY showing the two fixed tests
+
     @Test
     void validate_zeroQuantity_throwsIllegalArgumentException() {
         // Arrange
@@ -103,8 +105,10 @@ class ConsumableLedgerEntryGeneratorTest {
         rt.setPoolAccount(pool);
         ResourceAllocation badAlloc = new ResourceAllocation(1L, rt, BigDecimal.ZERO, AllocationKind.GENERAL, null, null);
 
-        when(allocationRepository.findByActionIdAndActionType(any(), any())).thenReturn(List.of(badAlloc));
-        when(transactionRepository.save(any())).thenReturn(new LedgerTransaction("tx", 1L));
+        when(allocationRepository.findByActionIdAndActionType(any(), any()))
+                .thenReturn(List.of(badAlloc));
+
+        // ❌ REMOVED: transactionRepository.save(...) stub
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class,
@@ -119,8 +123,10 @@ class ConsumableLedgerEntryGeneratorTest {
         rt.setPoolAccount(pool);
         ResourceAllocation negAlloc = new ResourceAllocation(1L, rt, new BigDecimal("-5"), AllocationKind.GENERAL, null, null);
 
-        when(allocationRepository.findByActionIdAndActionType(any(), any())).thenReturn(List.of(negAlloc));
-        when(transactionRepository.save(any())).thenReturn(new LedgerTransaction("tx", 1L));
+        when(allocationRepository.findByActionIdAndActionType(any(), any()))
+                .thenReturn(List.of(negAlloc));
+
+        // ❌ REMOVED: transactionRepository.save(...) stub
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class,

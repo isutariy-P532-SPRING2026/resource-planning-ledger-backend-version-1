@@ -66,6 +66,25 @@ public class PlanManager {
     }
 
     /**
+     * Adds a child node (sub-plan or action) to an existing plan node.
+     * type = "PLAN" creates a sub-plan composite; anything else creates a leaf action.
+     * Returns the full reloaded tree so the frontend can refresh in one call.
+     */
+    @Transactional
+    public Plan addChild(Long parentId, String name, String type) {
+        Plan parent = planRepository.findById(parentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Plan not found: " + parentId));
+        if ("PLAN".equalsIgnoreCase(type)) {
+            parent.addChild(new Plan(name, null, null));
+        } else {
+            parent.addChild(new ProposedAction(name, null, null, null, null));
+        }
+        planRepository.save(parent);
+        // Reload tree within same transaction so lazy collections are initialised
+        return getPlanWithTree(parentId);
+    }
+
+    /**
      * Recursively forces JPA lazy collections and populates the @Transient
      * loadedAllocations on every ProposedAction leaf so the iterator and report
      * can work purely in-memory without hitting the DB outside a transaction.

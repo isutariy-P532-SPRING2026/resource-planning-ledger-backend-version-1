@@ -8,6 +8,9 @@ import edu.indiana.p532.rpl.manager.LedgerManager;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.Map;
+
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -27,6 +30,17 @@ public class AccountController {
             return new AccountDto(acc.getId(), acc.getName(), acc.getKind().name(),
                     balance, balance.compareTo(BigDecimal.ZERO) < 0);
         }).toList();
+    }
+
+    @PostMapping("/{id}/deposit")
+    public AccountDto deposit(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        BigDecimal amount = new BigDecimal(body.get("amount").toString());
+        String description = body.getOrDefault("description", "Stock deposit").toString();
+        ledgerManager.depositToPool(id, amount, description);
+        Account acc = ledgerManager.getAccountById(id);
+        BigDecimal balance = ledgerManager.getBalance(acc.getId());
+        return new AccountDto(acc.getId(), acc.getName(), acc.getKind().name(),
+                balance, balance.compareTo(BigDecimal.ZERO) < 0);
     }
 
     @GetMapping("/{id}/entries")

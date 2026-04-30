@@ -60,10 +60,27 @@ public class ProtocolManager {
 
     @Transactional
     public Protocol update(Long id, ProtocolDto dto) {
-        Protocol protocol = getById(id);
+        Protocol protocol = protocolRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Protocol not found: " + id));
+        initSteps(protocol);  // force-load before clearing
         protocol.setName(dto.name());
         protocol.setDescription(dto.description());
-        return protocolRepository.save(protocol);
+        // Replace steps entirely; orphanRemoval=true deletes removed rows
+        protocol.getSteps().clear();
+        if (dto.steps() != null) {
+            int order = 0;
+            for (ProtocolStepDto stepDto : dto.steps()) {
+                Protocol subProtocol = stepDto.subProtocolId() != null
+                        ? protocolRepository.findById(stepDto.subProtocolId()).orElse(null)
+                        : null;
+                ProtocolStep step = new ProtocolStep(
+                        stepDto.name(), subProtocol, stepDto.dependsOn(), order++);
+                protocol.addStep(step);
+            }
+        }
+        Protocol saved = protocolRepository.save(protocol);
+        initSteps(saved);
+        return saved;
     }
 
     @Transactional
