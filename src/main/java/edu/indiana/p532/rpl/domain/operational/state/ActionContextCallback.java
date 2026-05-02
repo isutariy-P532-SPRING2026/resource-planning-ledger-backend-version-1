@@ -14,4 +14,5 @@ public interface ActionContextCallback {
     void onSuspend(ProposedAction action, String reason);
     void onComplete(ProposedAction action);
     void onAbandon(ProposedAction action);
+    boolean hasImplementation(ProposedAction action);
 }

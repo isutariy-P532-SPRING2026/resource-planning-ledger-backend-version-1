@@ -48,6 +48,10 @@ public class ActionContext {
         callback.onAbandon(action);
     }
 
+    public boolean hasExistingImplementation() {
+        return callback.hasImplementation(action);
+    }
+
     // --- fluent setters ---
     public ActionContext withImplementData(String party, String location, Instant start) {
         this.actualParty = party;

@@ -21,7 +21,11 @@ public class SuspendedState implements ActionState {
 
     @Override
     public void resume(ActionContext ctx) {
-        ctx.transitionTo(ActionStatus.PROPOSED);
+        // Resume to IN_PROGRESS if work had already started, otherwise back to PROPOSED
+        ActionStatus target = ctx.hasExistingImplementation()
+                ? ActionStatus.IN_PROGRESS
+                : ActionStatus.PROPOSED;
+        ctx.transitionTo(target);
     }
 
     @Override

@@ -53,11 +53,12 @@ public class PlanController {
 
     @PostMapping("/{id}/children")
     @ResponseStatus(HttpStatus.CREATED)
-    public PlanNodeDto addChild(@PathVariable Long id, @RequestBody Map<String, String> body) {
+    public Map<String, Object> addChild(@PathVariable Long id, @RequestBody Map<String, String> body) {
         String type = body.getOrDefault("type", "ACTION");
         String name = body.getOrDefault("name", "").trim();
         if (name.isEmpty()) throw new IllegalArgumentException("Child name is required");
-        return toDto(planManager.addChild(id, name, type));
+        planManager.addChild(id, name, type);
+        return Map.of("added", true, "parentId", id, "name", name, "type", type);
     }
 
     private PlanNodeDto toDto(Plan plan) {

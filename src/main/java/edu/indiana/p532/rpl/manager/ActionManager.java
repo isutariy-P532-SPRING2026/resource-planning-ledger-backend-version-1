@@ -246,6 +246,11 @@ public class ActionManager implements ActionContextCallback {
         audit("ABANDON_DETAIL", action.getId());
     }
 
+    @Override
+    public boolean hasImplementation(ProposedAction action) {
+        return implementedActionRepository.findByProposedActionId(action.getId()).isPresent();
+    }
+
     private ProposedAction load(Long id) {
         return actionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("ProposedAction not found: " + id));

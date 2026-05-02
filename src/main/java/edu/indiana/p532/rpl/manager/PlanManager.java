@@ -68,10 +68,10 @@ public class PlanManager {
     /**
      * Adds a child node (sub-plan or action) to an existing plan node.
      * type = "PLAN" creates a sub-plan composite; anything else creates a leaf action.
-     * Returns the full reloaded tree so the frontend can refresh in one call.
+     * The caller is responsible for reloading the tree after this call.
      */
     @Transactional
-    public Plan addChild(Long parentId, String name, String type) {
+    public void addChild(Long parentId, String name, String type) {
         Plan parent = planRepository.findById(parentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Plan not found: " + parentId));
         if ("PLAN".equalsIgnoreCase(type)) {
@@ -80,8 +80,6 @@ public class PlanManager {
             parent.addChild(new ProposedAction(name, null, null, null, null));
         }
         planRepository.save(parent);
-        // Reload tree within same transaction so lazy collections are initialised
-        return getPlanWithTree(parentId);
     }
 
     /**
