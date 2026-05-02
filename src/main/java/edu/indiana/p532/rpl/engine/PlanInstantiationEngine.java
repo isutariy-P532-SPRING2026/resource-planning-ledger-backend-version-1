@@ -7,9 +7,7 @@ import edu.indiana.p532.rpl.domain.operational.plannode.ProposedAction;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Engine: converts a Protocol template into a Plan with ProposedAction per step,
@@ -21,22 +19,27 @@ public class PlanInstantiationEngine {
 
     public Plan instantiate(String planName, Protocol protocol, LocalDate targetStartDate) {
         Plan plan = new Plan(planName, protocol, targetStartDate);
-
-        List<ProtocolStep> steps = protocol.getSteps();
-        Map<String, ProposedAction> stepNameToAction = new HashMap<>();
-
-        for (ProtocolStep step : steps) {
-            ProposedAction action = new ProposedAction(
-                    step.getName(),
-                    step.getSubProtocol() != null ? step.getSubProtocol() : protocol,
-                    null, null, null);
-            action.setDependsOn(step.getDependsOn());
-            plan.addChild(action);
-            stepNameToAction.put(step.getName(), action);
-        }
-
-        // Dependency structure preserved in step order and dependsOn metadata.
-        // Future: could store dependency edges in a separate entity if needed.
+        expandSteps(plan, protocol);
         return plan;
+    }
+
+    /**
+     * Recursively expands each step of the given protocol into the parent plan.
+     * Steps with a sub-protocol become nested Plan nodes (composite); plain steps
+     * become ProposedAction leaf nodes.
+     */
+    private void expandSteps(Plan parent, Protocol protocol) {
+        for (ProtocolStep step : protocol.getSteps()) {
+            if (step.getSubProtocol() != null) {
+                Plan subPlan = new Plan(step.getName(), step.getSubProtocol(), null);
+                expandSteps(subPlan, step.getSubProtocol());
+                parent.addChild(subPlan);
+            } else {
+                ProposedAction action = new ProposedAction(
+                        step.getName(), protocol, null, null, null);
+                action.setDependsOn(step.getDependsOn());
+                parent.addChild(action);
+            }
+        }
     }
 }

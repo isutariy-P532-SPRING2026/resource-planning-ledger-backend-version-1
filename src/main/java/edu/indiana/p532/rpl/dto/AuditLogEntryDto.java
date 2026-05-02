@@ -6,6 +6,7 @@ public record AuditLogEntryDto(
         Long accountId,
         Long entryId,
         Long actionId,
+        Long transactionId,
         String timestamp,
         String details
 ) {}

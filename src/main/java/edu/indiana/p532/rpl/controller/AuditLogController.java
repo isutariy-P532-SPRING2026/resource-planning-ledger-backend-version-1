@@ -27,7 +27,7 @@ public class AuditLogController {
     private AuditLogEntryDto toDto(AuditLogEntry e) {
         return new AuditLogEntryDto(
                 e.getId(), e.getEvent(), e.getAccountId(), e.getEntryId(),
-                e.getActionId(), e.getTimestamp().toString(), e.getDetails()
+                e.getActionId(), e.getTransactionId(), e.getTimestamp().toString(), e.getDetails()
         );
     }
 }

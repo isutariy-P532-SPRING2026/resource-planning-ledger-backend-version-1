@@ -70,25 +70,12 @@ public class Plan extends PlanNodeEntity {
             }
         }
 
-        // 1. Any IN_PROGRESS → IN_PROGRESS
         if (hasInProgress) return ActionStatus.IN_PROGRESS;
-
-        // 2. Mixed COMPLETED + PROPOSED → IN_PROGRESS  ✅ (this fixes your failing test)
+        if (hasSuspended)  return ActionStatus.SUSPENDED;
         if (hasCompleted && hasProposed) return ActionStatus.IN_PROGRESS;
-
-        // 3. All COMPLETED → COMPLETED
-        if (hasCompleted && !hasProposed && !hasSuspended && !hasAbandoned)
-            return ActionStatus.COMPLETED;
-
-        // 4. Any SUSPENDED (and none IN_PROGRESS) → SUSPENDED
-        if (hasSuspended) return ActionStatus.SUSPENDED;
-
-        // 5. All ABANDONED → ABANDONED
-        if (hasAbandoned && !hasProposed && !hasCompleted && !hasInProgress)
-            return ActionStatus.ABANDONED;
-
-        // 6. Default → PROPOSED
-        return ActionStatus.PROPOSED;
+        if (hasProposed) return ActionStatus.PROPOSED;
+        // Only terminal states remain (COMPLETED and/or ABANDONED)
+        return hasCompleted ? ActionStatus.COMPLETED : ActionStatus.ABANDONED;
     }
 
     @Override

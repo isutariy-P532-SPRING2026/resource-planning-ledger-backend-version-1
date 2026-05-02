@@ -24,6 +24,9 @@ public class AuditLogEntry {
     @Column(name = "action_id")
     private Long actionId;
 
+    @Column(name = "transaction_id")
+    private Long transactionId;
+
     @Column(nullable = false)
     private Instant timestamp;
 
@@ -46,6 +49,8 @@ public class AuditLogEntry {
     public Long getAccountId() { return accountId; }
     public Long getEntryId() { return entryId; }
     public Long getActionId() { return actionId; }
+    public Long getTransactionId() { return transactionId; }
+    public void setTransactionId(Long transactionId) { this.transactionId = transactionId; }
     public Instant getTimestamp() { return timestamp; }
     public String getDetails() { return details; }
 }

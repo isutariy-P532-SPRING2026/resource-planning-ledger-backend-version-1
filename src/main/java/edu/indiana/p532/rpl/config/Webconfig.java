@@ -14,7 +14,10 @@ public class Webconfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("https://resource-planning-ledger-frontend.onrender.com")
+                        .allowedOrigins(
+                                "https://resource-planning-ledger-frontend.onrender.com",
+                                "http://localhost:5173",
+                                "http://localhost:3000")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);

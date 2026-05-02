@@ -94,15 +94,21 @@ public abstract class AbstractLedgerEntryGenerator {
         postingRuleEngine.applyRules(savedWithdrawal, withdrawal.getAccount());
         postingRuleEngine.applyRules(savedDeposit, deposit.getAccount());
 
-        // audit both sides of the double-entry transaction
-        auditLogEntryRepository.save(new AuditLogEntry(
-                "ENTRY_POSTED", withdrawal.getAccount().getId(),
-                savedWithdrawal.getId(), tx.getOriginatingActionId(),
-                "amount=" + withdrawal.getAmount()));
-        auditLogEntryRepository.save(new AuditLogEntry(
-                "ENTRY_POSTED", deposit.getAccount().getId(),
-                savedDeposit.getId(), tx.getOriginatingActionId(),
-                "amount=" + deposit.getAmount()));
+        // audit the full double-entry transaction as one record
+        BigDecimal txSum = savedWithdrawal.getAmount().add(savedDeposit.getAmount());
+        String details = "debit: " + withdrawal.getAccount().getName()
+                + " " + savedWithdrawal.getAmount().toPlainString()
+                + " | credit: " + deposit.getAccount().getName()
+                + " +" + savedDeposit.getAmount().toPlainString()
+                + " | sum: " + txSum.toPlainString();
+        AuditLogEntry txAudit = new AuditLogEntry(
+                "TRANSACTION_POSTED",
+                withdrawal.getAccount().getId(),
+                null,
+                tx.getOriginatingActionId(),
+                details);
+        txAudit.setTransactionId(tx.getId());
+        auditLogEntryRepository.save(txAudit);
     }
 
     private Account findOrCreateUsageAccount(ResourceType resourceType, Long actionId) {
