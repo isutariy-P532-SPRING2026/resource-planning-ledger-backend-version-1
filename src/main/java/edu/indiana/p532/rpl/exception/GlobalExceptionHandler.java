@@ -1,5 +1,6 @@
 package edu.indiana.p532.rpl.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -29,7 +30,13 @@ public class GlobalExceptionHandler {
                 .body(errorBody(ex.getMessage()));
     }
 
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleIntegrityViolation(DataIntegrityViolationException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(errorBody("Cannot delete: this record is referenced by existing allocations or ledger entries."));
+    }
+
     private Map<String, Object> errorBody(String message) {
-        return Map.of("error", message, "timestamp", Instant.now().toString());
+        return Map.of("message", message, "timestamp", Instant.now().toString());
     }
 }
