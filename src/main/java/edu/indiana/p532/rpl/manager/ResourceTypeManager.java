@@ -26,13 +26,22 @@ public class ResourceTypeManager {
 
     @Transactional(readOnly = true)
     public List<ResourceType> listAll() {
-        return resourceTypeRepository.findAll();
+        List<ResourceType> types = resourceTypeRepository.findAll();
+        // Touch pool-account name while the session is still open.
+        // @OneToOne is EAGER by default, but Hibernate can still return an
+        // uninitialised proxy in some configurations; getName() forces a full load.
+        types.forEach(rt -> {
+            if (rt.getPoolAccount() != null) rt.getPoolAccount().getName();
+        });
+        return types;
     }
 
     @Transactional(readOnly = true)
     public ResourceType getById(Long id) {
-        return resourceTypeRepository.findById(id)
+        ResourceType rt = resourceTypeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("ResourceType not found: " + id));
+        if (rt.getPoolAccount() != null) rt.getPoolAccount().getName();
+        return rt;
     }
 
     @Transactional

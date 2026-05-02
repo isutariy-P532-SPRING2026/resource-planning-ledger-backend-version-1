@@ -65,8 +65,11 @@ public class ProtocolManager {
         initSteps(protocol);  // force-load before clearing
         protocol.setName(dto.name());
         protocol.setDescription(dto.description());
-        // Replace steps entirely; orphanRemoval=true deletes removed rows
         protocol.getSteps().clear();
+        // Flush the orphan DELETEs to the DB now, before we INSERT the new steps.
+        // Without this, Hibernate may attempt INSERTs before DELETEs on PostgreSQL,
+        // which can cause constraint violations or return stale data.
+        stepRepository.flush();
         if (dto.steps() != null) {
             int order = 0;
             for (ProtocolStepDto stepDto : dto.steps()) {
@@ -96,7 +99,11 @@ public class ProtocolManager {
     private void initSteps(Protocol p) {
         p.getSteps().forEach(s -> {
             if (s.getSubProtocol() != null) {
-                s.getSubProtocol().getId(); // touch proxy to initialise it
+                // getName() — not getId() — forces Hibernate to fully load the proxy.
+                // getId() is stored in the proxy itself and does NOT trigger a DB load,
+                // so calling only getId() leaves the proxy uninitialised; getName() then
+                // throws LazyInitializationException once the session is closed.
+                s.getSubProtocol().getName();
             }
         });
     }
